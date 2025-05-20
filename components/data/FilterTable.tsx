@@ -105,7 +105,9 @@ export default function FilterTable({
   }, [refresh]);
 
   useEffect(() => {
-    const eventSource = new EventSource("http://127.0.0.1:8000/sse");
+    const eventSource = new EventSource(
+      `${process.env.NEXT_PUBLIC_API_URL}/sse`
+    );
 
     eventSource.onopen = function () {
       console.log("Connection to server opened");
