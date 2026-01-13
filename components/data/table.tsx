@@ -1,4 +1,5 @@
 import type { TableWeights } from "@/lib/definition";
+import { formatDate } from "@/lib/dataMapper";
 
 export default function WeightsTable({ weights }: { weights: TableWeights[] }) {
   return (
@@ -31,7 +32,7 @@ export default function WeightsTable({ weights }: { weights: TableWeights[] }) {
                     scope="col"
                     className="px-3 py-5 font-medium border-r-2 border-b-2"
                   >
-                    Fecha y hora
+                    Hora y fecha
                   </th>
                   <th
                     scope="col"
@@ -62,7 +63,7 @@ export default function WeightsTable({ weights }: { weights: TableWeights[] }) {
                       {weight.scale}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3">
-                      {weight.date_time}
+                      {formatDate(weight.date_time)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-center">
                       {weight.initial_weight}

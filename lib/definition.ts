@@ -84,3 +84,12 @@ export interface RealTimeWeight {
   package: string;
   package_id: number;
 }
+
+export interface ChartWeight {
+  date_time: string;
+  id: number;
+  initial_weight: number;
+  final_weight: number;
+  maximum_weight: number;
+  minimum_weight: number;
+}

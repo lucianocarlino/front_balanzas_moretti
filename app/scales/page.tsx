@@ -33,6 +33,7 @@ export default function Page() {
             scale_id={scale.scale_id}
             name={scale.name}
             slave_address={scale.slave_address}
+            status={scale.online}
             packages={scale.packages}
           />
         ))}
