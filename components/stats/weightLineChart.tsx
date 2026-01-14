@@ -16,6 +16,56 @@ import { RechartsDevtools } from "@recharts/devtools";
 import { ChartWeight } from "@/lib/definition";
 import { formatDate } from "@/lib/dataMapper";
 
+// Tipo para el tooltip
+interface CustomTooltipProps {
+  active?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any[];
+  label?: string;
+}
+
+// Tooltip personalizado
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
+  if (!active || !payload || payload.length === 0) return null;
+
+  // Definir el orden que querés
+  const order = [
+    "initial_weight",
+    "final_weight",
+    "maximum_weight",
+    "minimum_weight",
+  ];
+
+  // Nombres personalizados
+  const names: Record<string, string> = {
+    final_weight: "Peso final",
+    initial_weight: "Peso inicial",
+    maximum_weight: "Peso máximo",
+    minimum_weight: "Peso mínimo",
+  };
+
+  // Ordenar el payload según el orden definido
+  const sorted = [...payload].sort((a, b) => {
+    const indexA = order.indexOf(a.dataKey as string);
+    const indexB = order.indexOf(b.dataKey as string);
+    return indexA - indexB;
+  });
+
+  // Obtener la fecha del punto actual
+  const dateTime = payload[0]?.payload?.date_time ?? "";
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-md shadow-md p-3">
+      <p className="text-gray-800 mb-2">{formatDate(dateTime)}</p>
+      {sorted.map((entry, index) => (
+        <p key={index} style={{ color: entry.color }} className="text-sm">
+          {names[entry.dataKey as string] || entry.name}: {entry.value}g
+        </p>
+      ))}
+    </div>
+  );
+};
+
 export default function WeightLineChart({
   weights,
 }: {
@@ -40,7 +90,7 @@ export default function WeightLineChart({
               textAnchor="end"
             />
             <YAxis />
-            <Tooltip />
+            <Tooltip content={<CustomTooltip />} />
             <Legend
               verticalAlign="top"
               align="right"
