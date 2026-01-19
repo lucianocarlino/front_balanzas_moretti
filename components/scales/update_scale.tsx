@@ -2,7 +2,9 @@
 
 import { updateScale } from "@/lib/action";
 import { ResponsePackages, ResponseScales } from "@/lib/definition";
+import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "../utils/button";
 import { useEffect, useState } from "react";
 
@@ -16,6 +18,8 @@ export default function Form({
   let lengthSelectedPackages = scale.packages.length;
   const maxPackages = 8;
   const [isDisabled, setIsDisabled] = useState(false);
+  const { showToast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     setIsDisabled(lengthSelectedPackages > maxPackages);
@@ -29,8 +33,20 @@ export default function Form({
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const result = await updateScale(scale.scale_id, formData);
+    if (!result.success) {
+      showToast(result.error || "Error al actualizar la balanza", "error");
+      return;
+    }
+    showToast("Balanza actualizada correctamente", "success");
+    router.push("/scales");
+  };
+
   return (
-    <form action={updateScale.bind(null, scale.scale_id)}>
+    <form onSubmit={handleSubmit}>
       <div className="rounded-md bg-gray-100 p-4 md:p-6">
         <div className="mb-4">
           <label

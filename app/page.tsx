@@ -7,16 +7,41 @@ export default async function Page({
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
-  const packages = await getAllPackages();
-  const scales = await getAllScales();
-  const oldWeights = await getWeights(
+  const packagesResult = await getAllPackages();
+  const scalesResult = await getAllScales();
+
+  if (!packagesResult.success || !scalesResult.success) {
+    return (
+      <div className="w-full bg-white p-4">
+        <h1 className="text-2xl text-red-500">Error</h1>
+        <p className="text-gray-600">
+          {packagesResult.error || scalesResult.error}
+        </p>
+      </div>
+    );
+  }
+
+  const packages = packagesResult.data!;
+  const scales = scalesResult.data!;
+
+  const weightsResult = await getWeights(
     1000,
     "",
     "",
     packages.map((package_) => package_.package_id),
-    scales.map((scale) => scale.scale_id)
+    scales.map((scale) => scale.scale_id),
   );
 
+  if (!weightsResult.success) {
+    return (
+      <div className="w-full bg-white p-4">
+        <h1 className="text-2xl text-red-500">Error</h1>
+        <p className="text-gray-600">{weightsResult.error}</p>
+      </div>
+    );
+  }
+
+  const oldWeights = weightsResult.data!;
   const resolvedSearchParams = await searchParams;
   const currentPage = Number(resolvedSearchParams.page) || 1;
   const totalPages = Math.ceil(oldWeights.length / 15);

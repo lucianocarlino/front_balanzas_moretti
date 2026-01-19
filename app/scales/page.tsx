@@ -8,10 +8,26 @@ import { useEffect, useState } from "react";
 
 export default function Page() {
   const [scales, setScales] = useState<ResponseScales[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getAllScales().then((data) => setScales(data));
+    getAllScales().then((result) => {
+      if (result.success) {
+        setScales(result.data!);
+      } else {
+        setError(result.error || "Error al cargar las balanzas");
+      }
+    });
   }, []);
+
+  if (error) {
+    return (
+      <div className="w-full bg-white p-4">
+        <h1 className="text-2xl text-red-500">Error</h1>
+        <p className="text-gray-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

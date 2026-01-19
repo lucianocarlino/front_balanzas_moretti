@@ -2,7 +2,9 @@
 
 import { createScale } from "@/lib/action";
 import { ResponsePackages } from "@/lib/definition";
+import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "../utils/button";
 import { useEffect, useState } from "react";
 
@@ -16,6 +18,8 @@ export default function Form({
   const [lengthSelectedPackages, setLengthSelectedPackages] = useState(0);
   const maxPackages = 8;
   const [isDisabled, setIsDisabled] = useState(false);
+  const { showToast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     setIsDisabled(lengthSelectedPackages > maxPackages);
@@ -30,8 +34,20 @@ export default function Form({
     console.log(lengthSelectedPackages);
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const result = await createScale(formData);
+    if (!result.success) {
+      showToast(result.error || "Error al crear la balanza", "error");
+      return;
+    }
+    showToast("Balanza creada correctamente", "success");
+    router.push("/scales");
+  };
+
   return (
-    <form action={createScale.bind(null)}>
+    <form onSubmit={handleSubmit}>
       <div className="rounded-md bg-gray-100 p-4 md:p-6">
         <div className="mb-4">
           <label
