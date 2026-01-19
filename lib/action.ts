@@ -265,3 +265,31 @@ export async function updatePackage(
   }
   redirect("/packages");
 }
+
+export async function restoreScale(scale_id: number): Promise<ActionResult> {
+  try {
+    await server.put(`/scales/restore/${scale_id}`);
+    revalidatePath("/scales");
+  } catch (error) {
+    return {
+      success: false,
+      error: getErrorMessage(error, "Error al restaurar balanza"),
+    };
+  }
+  redirect("/scales");
+}
+
+export async function restorePackage(
+  package_id: number,
+): Promise<ActionResult> {
+  try {
+    await server.put(`/packages/restore/${package_id}`);
+    revalidatePath("/packages");
+  } catch (error) {
+    return {
+      success: false,
+      error: getErrorMessage(error, "Error al restaurar paquete"),
+    };
+  }
+  redirect("/packages");
+}

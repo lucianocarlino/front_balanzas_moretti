@@ -29,15 +29,19 @@ export default function FilterTable({
   packages: ResponsePackages[];
   totalPages: number;
 }) {
+  // Solo activos para los selectores del formulario
+  const activePackages = packages.filter((pkg) => pkg.active);
+  const activeScales = scales.filter((scale) => scale.active);
+
   const [packagesSelected, setPackagesSelected] = useState<ResponsePackages[]>(
-    []
+    [],
   );
   const [scalesSelected, setScalesSelected] = useState<ResponseScales[]>([]);
   const [init, setInit] = useState<Date>(new Date(0));
   const [end, setEnd] = useState<Date>(new Date());
   const [limit, setLimit] = useState<number>(1000);
   const [weights, setWeights] = useState<TableWeights[]>(
-    tableWeights(oldWeights, packages, scales)
+    tableWeights(oldWeights, packages, scales),
   );
   const [sortVariable, setSortVariable] = useState<string>("Id");
   const [sortOrder, setSortOrder] = useState<string>("Desc");
@@ -74,8 +78,8 @@ export default function FilterTable({
           weight1.date_time < weight2.date_time
             ? -1
             : weight1.date_time > weight2.date_time
-            ? 1
-            : 0;
+              ? 1
+              : 0;
       }
       if (sortVariable === "Envases") {
         res = weight1.package_id - weight2.package_id;
@@ -97,7 +101,7 @@ export default function FilterTable({
       }
       return res;
     },
-    [sortVariable, sortOrder]
+    [sortVariable, sortOrder],
   );
 
   useEffect(() => {
@@ -106,7 +110,7 @@ export default function FilterTable({
 
   useEffect(() => {
     const eventSource = new EventSource(
-      `${process.env.NEXT_PUBLIC_API_URL}/sse`
+      `${process.env.NEXT_PUBLIC_API_URL}/sse`,
     );
 
     eventSource.onopen = function () {
@@ -117,7 +121,7 @@ export default function FilterTable({
       let data = event.data.replace(/'/g, '"');
       data = data.replace(
         /datetime\.datetime\((\d+), (\d+), (\d+), (\d+), (\d+)\)/g,
-        '"$1-$2-$3T$4:$5:00"'
+        '"$1-$2-$3T$4:$5:00"',
       );
       console.log("Data received from server: ", JSON.parse(data));
       // console.log("Data received");
@@ -130,8 +134,8 @@ export default function FilterTable({
               init.toISOString(),
               endRef.current.toISOString(),
               packagesSelected.map((package_) => package_.package_id),
-              scalesSelected.map((scale) => scale.scale_id)
-            )
+              scalesSelected.map((scale) => scale.scale_id),
+            ),
           )
           .sort(optionalSorter)
           .slice(0, limit);
@@ -158,7 +162,7 @@ export default function FilterTable({
     init: string,
     end: string,
     packages_id: number[],
-    scales_id: number[]
+    scales_id: number[],
   ) {
     const parseInit = new Date(init);
     const parseEnd = new Date(end);
@@ -179,7 +183,7 @@ export default function FilterTable({
     packagesSelected: ResponsePackages[],
     scalesSelected: ResponseScales[],
     sortVariable: string,
-    sortOrder: string
+    sortOrder: string,
   ) {
     if (initSelected === "") initSelected = new Date(0).toISOString();
     if (endSelected === "") endSelected = new Date().toISOString();
@@ -204,11 +208,11 @@ export default function FilterTable({
               initSelected,
               endSelected,
               packages_id,
-              scales_id
-            )
+              scales_id,
+            ),
           )
           .sort(optionalSorter)
-          .slice(0, limitSelected)
+          .slice(0, limitSelected),
       );
     }
   }
@@ -234,8 +238,8 @@ export default function FilterTable({
         </h4>
         <div className="w-px bg-gray-200" />
         <FormFilter
-          packages={packages}
-          scales={scales}
+          packages={activePackages}
+          scales={activeScales}
           limitSelectedAnt={limit}
           initSelectedAnt={init}
           endSelectedAnt={end}

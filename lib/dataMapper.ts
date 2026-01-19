@@ -7,7 +7,7 @@ import {
 } from "./definition";
 
 export function realTimeWeights_to_ResponseWeights(
-  data: RealTimeWeight[]
+  data: RealTimeWeight[],
 ): ResponseWeights[] {
   return data.map((weight) => {
     return {
@@ -24,19 +24,36 @@ export function realTimeWeights_to_ResponseWeights(
 export function tableWeights(
   weights: ResponseWeights[],
   packages: ResponsePackages[],
-  scales: ResponseScales[]
+  scales: ResponseScales[],
 ): TableWeights[] {
   return weights.map((weight) => {
+    const foundPackage = packages.find(
+      (package_) => package_.package_id === weight.package_id,
+    );
+    const foundScale = scales.find(
+      (scale) => scale.scale_id === weight.scale_id,
+    );
+
+    const packageName = foundPackage
+      ? foundPackage.active
+        ? foundPackage.name
+        : `${foundPackage.name} (eliminado)`
+      : "(Paquete no encontrado)";
+
+    const scaleName = foundScale
+      ? foundScale.active
+        ? foundScale.name
+        : `${foundScale.name} (eliminada)`
+      : "(Balanza no encontrada)";
+
     return {
       id: weight.id,
       date_time: weight.date_time,
       package_id: weight.package_id,
-      package: packages.find(
-        (package_) => package_.package_id === weight.package_id
-      )!.name,
+      package: packageName,
       initial_weight: weight.initial_weight,
       final_weight: weight.final_weight,
-      scale: scales.find((scale) => scale.scale_id === weight.scale_id)!.name,
+      scale: scaleName,
       scale_id: weight.scale_id,
     };
   });

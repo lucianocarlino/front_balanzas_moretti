@@ -22,7 +22,7 @@ export default async function Page(props: { params: Promise<{ id: number }> }) {
   }
 
   const scale = scaleResult.data!;
-  const packages = packagesResult.data!;
+  const packages = packagesResult.data!.filter((pkg) => pkg.active);
 
   return (
     <div className="w-full">

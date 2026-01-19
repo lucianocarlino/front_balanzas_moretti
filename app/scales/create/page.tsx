@@ -1,19 +1,25 @@
 "use client";
 
 import Form from "@/components/scales/create_scale";
-import { getAllPackages, getAvailableAddresses } from "@/lib/action";
-import { ResponsePackages } from "@/lib/definition";
+import RestoreScaleForm from "@/components/scales/restore_scale";
+import {
+  getAllPackages,
+  getAvailableAddresses,
+  getAllScales,
+} from "@/lib/action";
+import { ResponsePackages, ResponseScales } from "@/lib/definition";
 import { useEffect, useState } from "react";
 
 export default function Page() {
   const [packages, setPackages] = useState<ResponsePackages[]>([]);
   const [available_addresses, setAvailableAddresses] = useState<number[]>([]);
+  const [deletedScales, setDeletedScales] = useState<ResponseScales[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getAllPackages().then((result) => {
       if (result.success) {
-        setPackages(result.data!);
+        setPackages(result.data!.filter((pkg) => pkg.active));
       } else {
         setError(result.error || "Error al cargar los paquetes");
       }
@@ -23,6 +29,11 @@ export default function Page() {
         setAvailableAddresses(result.data!);
       } else {
         setError(result.error || "Error al cargar las direcciones disponibles");
+      }
+    });
+    getAllScales().then((result) => {
+      if (result.success) {
+        setDeletedScales(result.data!.filter((scale) => !scale.active));
       }
     });
   }, []);
@@ -43,6 +54,7 @@ export default function Page() {
       </div>
       <div className="w-full border m-2" />
       <Form packages={packages} available_addresses={available_addresses} />
+      <RestoreScaleForm deletedScales={deletedScales} />
     </div>
   );
 }

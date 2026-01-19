@@ -44,6 +44,7 @@ export interface ResponseScales {
   packages: ResponsePackages[];
   online: boolean;
   mapped: boolean;
+  active: boolean;
 }
 
 export interface ResponseWeights {
@@ -61,6 +62,7 @@ export interface ResponsePackages {
   expected_weight: number;
   minimum_weight: number;
   maximum_weight: number;
+  active: boolean;
 }
 
 export interface TableWeights {

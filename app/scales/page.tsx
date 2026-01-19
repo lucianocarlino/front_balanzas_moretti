@@ -13,7 +13,7 @@ export default function Page() {
   useEffect(() => {
     getAllScales().then((result) => {
       if (result.success) {
-        setScales(result.data!);
+        setScales(result.data!.filter((scale) => scale.active));
       } else {
         setError(result.error || "Error al cargar las balanzas");
       }

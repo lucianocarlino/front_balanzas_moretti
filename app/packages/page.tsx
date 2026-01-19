@@ -13,7 +13,7 @@ export default function Page() {
   useEffect(() => {
     getAllPackages().then((result) => {
       if (result.success) {
-        setPackages(result.data!);
+        setPackages(result.data!.filter((pkg) => pkg.active));
       } else {
         setError(result.error || "Error al cargar los paquetes");
       }
