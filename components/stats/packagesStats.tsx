@@ -17,17 +17,21 @@ interface PackagesStatsProps {
 
 export default function PackagesStats({
   weights,
-  scales,
   packages,
 }: PackagesStatsProps) {
-  const [selectedPackage, setSelectedPackage] = useState<ResponsePackages>(
-    packages[0]
+  // 'scales' is part of the props type but not used here; prefix with underscore to avoid lint error
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _scales = null as unknown as ResponseScales[];
+  const [selectedPackage, setSelectedPackage] =
+    useState<ResponsePackages | null>(packages.length > 0 ? packages[0] : null);
+  const [cantWeights, setcantWeights] = useState<number>(
+    weights.length > 0 ? weights.length : 10,
   );
-  const [cantWeights, setcantWeights] = useState<number>(scales.length);
 
   const handlePackageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = Number(e.target.value);
-    setSelectedPackage(packages.find((pkg) => pkg.package_id === value)!);
+    const found = packages.find((pkg) => pkg.package_id === value) ?? null;
+    setSelectedPackage(found);
   };
 
   const handlecantWeightsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,21 +41,24 @@ export default function PackagesStats({
 
   // Filtrar pesos según la balanza seleccionada
   const filteredWeights = useMemo<ChartWeight[]>(() => {
+    if (!selectedPackage) return [];
+
     const result = weights
       .filter((w) => w.package_id === selectedPackage.package_id)
       .slice(0, cantWeights);
 
     // Limitar cantidad de registros
-    return result.map((w) => ({
-      id: w.id,
-      initial_weight: w.initial_weight,
-      final_weight: w.final_weight,
-      maximum_weight: packages.find((p) => p.package_id === w.package_id)!
-        .maximum_weight,
-      minimum_weight: packages.find((p) => p.package_id === w.package_id)!
-        .minimum_weight,
-      date_time: w.date_time,
-    }));
+    return result.map((w) => {
+      const pkg = packages.find((p) => p.package_id === w.package_id);
+      return {
+        id: w.id,
+        initial_weight: w.initial_weight,
+        final_weight: w.final_weight,
+        maximum_weight: pkg?.maximum_weight ?? 0,
+        minimum_weight: pkg?.minimum_weight ?? 0,
+        date_time: w.date_time,
+      };
+    });
   }, [weights, selectedPackage, cantWeights, packages]);
 
   return (
@@ -86,15 +93,20 @@ export default function PackagesStats({
             </label>
             <select
               id="package-selector"
-              value={selectedPackage.package_id}
+              value={selectedPackage?.package_id ?? ""}
               onChange={handlePackageChange}
+              disabled={packages.length === 0}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700"
             >
-              {packages.map((pkg) => (
-                <option key={pkg.package_id} value={pkg.package_id}>
-                  {pkg.name}
-                </option>
-              ))}
+              {packages.length === 0 ? (
+                <option value="">No hay paquetes</option>
+              ) : (
+                packages.map((pkg) => (
+                  <option key={pkg.package_id} value={pkg.package_id}>
+                    {pkg.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
         </div>

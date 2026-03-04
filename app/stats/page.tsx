@@ -1,4 +1,5 @@
 import { getAllPackages, getAllScales, getWeights } from "@/lib/action";
+import { ResponseWeights } from "@/lib/definition";
 import ScalesStats from "@/components/stats/scalesStats";
 import PackagesStats from "@/components/stats/packagesStats";
 
@@ -19,25 +20,27 @@ export default async function Page() {
 
   const packages = packagesResult.data!;
   const scales = scalesResult.data!;
-
-  const weightsResult = await getWeights(
-    1000,
-    "",
-    "",
-    packages.map((package_) => package_.package_id),
-    scales.map((scale) => scale.scale_id),
-  );
-
-  if (!weightsResult.success) {
-    return (
-      <div className="w-full bg-white p-4">
-        <h1 className="text-2xl text-red-500">Error</h1>
-        <p className="text-gray-600">{weightsResult.error}</p>
-      </div>
+  let oldWeights: ResponseWeights[] = [];
+  if (packages.length > 0 && scales.length > 0) {
+    const weightsResult = await getWeights(
+      1000,
+      "",
+      "",
+      packages.map((package_) => package_.package_id),
+      scales.map((scale) => scale.scale_id),
     );
-  }
 
-  const oldWeights = weightsResult.data!;
+    if (!weightsResult.success) {
+      return (
+        <div className="w-full bg-white p-4">
+          <h1 className="text-2xl text-red-500">Error</h1>
+          <p className="text-gray-600">{weightsResult.error}</p>
+        </div>
+      );
+    }
+
+    oldWeights = weightsResult.data!;
+  }
 
   return (
     <div className="w-full bg-white min-h-screen">

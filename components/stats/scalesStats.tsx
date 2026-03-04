@@ -20,15 +20,20 @@ export default function ScalesStats({
   scales,
   packages,
 }: ScalesStatsProps) {
-  const [selectedScale, setSelectedScale] = useState<ResponseScales>(scales[0]);
-  const [cantWeights, setcantWeights] = useState<number>(scales.length);
+  const [selectedScale, setSelectedScale] = useState<ResponseScales | null>(
+    scales.length > 0 ? scales[0] : null,
+  );
+  const [cantWeights, setcantWeights] = useState<number>(
+    weights.length > 0 ? weights.length : 10,
+  );
   const [selectedPackage, setSelectedPackage] = useState<
     ResponsePackages | string
   >("all");
 
   const handleScaleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = Number(e.target.value);
-    setSelectedScale(scales.find((scale) => scale.scale_id === value)!);
+    const found = scales.find((scale) => scale.scale_id === value) ?? null;
+    setSelectedScale(found);
     setSelectedPackage("all"); // Resetear paquete al cambiar balanza
   };
 
@@ -43,34 +48,38 @@ export default function ScalesStats({
       setSelectedPackage("all");
     } else {
       // Buscar en los paquetes de la balanza seleccionada
-      setSelectedPackage(
-        selectedScale.packages.find((pkg) => pkg.package_id === Number(value))!
+      const pkg = selectedScale?.packages.find(
+        (pkg) => pkg.package_id === Number(value),
       );
+      setSelectedPackage(pkg ?? "all");
     }
   };
 
   // Filtrar pesos según la balanza seleccionada
   const filteredWeights = useMemo<ChartWeight[]>(() => {
+    if (!selectedScale) return [];
+
     const result = weights
       .filter((w) => w.scale_id === selectedScale.scale_id)
       .filter((w) =>
         selectedPackage === "all"
           ? true
-          : w.package_id === (selectedPackage as ResponsePackages).package_id
+          : w.package_id === (selectedPackage as ResponsePackages).package_id,
       )
       .slice(0, cantWeights);
 
     // Limitar cantidad de registros
-    return result.map((w) => ({
-      id: w.id,
-      initial_weight: w.initial_weight,
-      final_weight: w.final_weight,
-      maximum_weight: packages.find((p) => p.package_id === w.package_id)!
-        .maximum_weight,
-      minimum_weight: packages.find((p) => p.package_id === w.package_id)!
-        .minimum_weight,
-      date_time: w.date_time,
-    }));
+    return result.map((w) => {
+      const pkg = packages.find((p) => p.package_id === w.package_id);
+      return {
+        id: w.id,
+        initial_weight: w.initial_weight,
+        final_weight: w.final_weight,
+        maximum_weight: pkg?.maximum_weight ?? 0,
+        minimum_weight: pkg?.minimum_weight ?? 0,
+        date_time: w.date_time,
+      };
+    });
   }, [weights, selectedScale, cantWeights, packages, selectedPackage]);
 
   return (
@@ -105,15 +114,20 @@ export default function ScalesStats({
             </label>
             <select
               id="scale-selector"
-              value={selectedScale.scale_id}
+              value={selectedScale?.scale_id ?? ""}
               onChange={handleScaleChange}
+              disabled={scales.length === 0}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700"
             >
-              {scales.map((scale) => (
-                <option key={scale.scale_id} value={scale.scale_id}>
-                  {scale.name}
-                </option>
-              ))}
+              {scales.length === 0 ? (
+                <option value="">No hay balanzas</option>
+              ) : (
+                scales.map((scale) => (
+                  <option key={scale.scale_id} value={scale.scale_id}>
+                    {scale.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
           <div className="flex items-center gap-2">
@@ -128,13 +142,16 @@ export default function ScalesStats({
               value={
                 selectedPackage === "all"
                   ? "all"
-                  : (selectedPackage as ResponsePackages).package_id
+                  : typeof selectedPackage === "string"
+                    ? "all"
+                    : (selectedPackage as ResponsePackages).package_id
               }
               onChange={handlePackageChange}
+              disabled={!selectedScale || selectedScale.packages.length === 0}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700"
             >
               <option value="all">Todos los paquetes</option>
-              {selectedScale.packages.map((pkg) => (
+              {(selectedScale?.packages ?? []).map((pkg) => (
                 <option key={pkg.package_id} value={pkg.package_id}>
                   {pkg.name}
                 </option>
