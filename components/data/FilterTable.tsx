@@ -8,7 +8,7 @@ import {
 } from "@/lib/definition";
 import FormFilter from "./formFilter";
 import { WeightsTableSkeleton } from "../skeletons/skeletons";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, useMemo } from "react";
 import Table from "@/components/data/table";
 import Pagination from "../navigation/pagination";
 import {
@@ -30,8 +30,14 @@ export default function FilterTable({
   totalPages: number;
 }) {
   // Solo activos para los selectores del formulario
-  const activePackages = packages.filter((pkg) => pkg.active);
-  const activeScales = scales.filter((scale) => scale.active);
+  const activePackages = useMemo(() => packages.filter((pkg) => pkg.active), [packages]);
+  const activeScales = useMemo(() => scales.filter((scale) => scale.active), [scales]);
+
+  // Memoizar mapping inicial
+  const mappedInitialWeights = useMemo(
+    () => tableWeights(oldWeights, packages, scales),
+    [oldWeights, packages, scales],
+  );
 
   const [packagesSelected, setPackagesSelected] = useState<ResponsePackages[]>(
     [],
@@ -40,15 +46,21 @@ export default function FilterTable({
   const [init, setInit] = useState<Date>(new Date(0));
   const [end, setEnd] = useState<Date>(new Date());
   const [limit, setLimit] = useState<number>(1000);
-  const [weights, setWeights] = useState<TableWeights[]>(
-    tableWeights(oldWeights, packages, scales),
-  );
+  const [weights, setWeights] = useState<TableWeights[]>(() => mappedInitialWeights);
   const [sortVariable, setSortVariable] = useState<string>("Id");
   const [sortOrder, setSortOrder] = useState<string>("Desc");
   const [refresh, setRefresh] = useState<boolean>(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   const refreshRef = useRef(refresh);
+  // Refs para que el handler del SSE lea el estado actual sin recrear el listener
+  const packagesRef = useRef(packages);
+  const scalesRef = useRef(scales);
+  const packagesSelectedRef = useRef(packagesSelected);
+  const scalesSelectedRef = useRef(scalesSelected);
+  const initRefLocal = useRef(init);
+  const limitRef = useRef(limit);
+  const optionalSorterRef = useRef<(w1: ResponseWeights, w2: ResponseWeights) => number>(() => 0);
 
   const [refreshEnd, setRefreshEnd] = useState<boolean>(true);
   const endRef = useRef<Date>(new Date());
@@ -108,54 +120,93 @@ export default function FilterTable({
     refreshRef.current = refresh;
   }, [refresh]);
 
+  // Mantener refs actualizados cuando el estado cambia
   useEffect(() => {
-    const eventSource = new EventSource(
-      `${process.env.NEXT_PUBLIC_API_URL}/sse`,
-    );
+    packagesRef.current = packages;
+    scalesRef.current = scales;
+    packagesSelectedRef.current = packagesSelected;
+    scalesSelectedRef.current = scalesSelected;
+    initRefLocal.current = init;
+    limitRef.current = limit;
+    refreshRef.current = refresh;
+  }, [packages, scales, packagesSelected, scalesSelected, init, limit, refresh]);
 
-    eventSource.onopen = function () {
-      console.log("Connection to server opened");
-    };
+  // Cuando packages o scales cambian (ej: se agregan nuevos), remapear weights con los nuevos datos
+  useEffect(() => {
+    // Si packages o scales cambiaron, remapear los pesos actuales con los nuevos datos
+    // para evitar que SSE dispare con data stale
+    setWeights((prevWeights) => {
+      const remapped = prevWeights.map((w) => {
+        // Buscar paquete y balanza con los nuevos datos
+        const pkg = packages.find((p) => Number(p.package_id) === Number(w.package_id));
+        const scale = scales.find((s) => Number(s.scale_id) === Number(w.scale_id));
 
-    eventSource.addEventListener("newWeights", function (event) {
+        const packageName = pkg
+          ? pkg.active
+            ? pkg.name
+            : `${pkg.name} (eliminado)`
+          : "(Paquete no encontrado)";
+
+        const scaleName = scale
+          ? scale.active
+            ? scale.name
+            : `${scale.name} (eliminada)`
+          : "(Balanza no encontrada)";
+
+        return { ...w, package: packageName, scale: scaleName };
+      });
+      return remapped;
+    });
+  }, [packages, scales]);
+
+  // Mantener optionalSorter en ref
+  useEffect(() => {
+    optionalSorterRef.current = optionalSorter;
+  }, [optionalSorter]);
+
+  // Crear EventSource UNA SOLA VEZ en mount, leer estado desde refs
+  useEffect(() => {
+    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/sse`);
+    es.onopen = () => console.log("SSE connection opened");
+
+    const onNewWeights = (event: MessageEvent) => {
       let data = event.data.replace(/'/g, '"');
       data = data.replace(
         /datetime\.datetime\((\d+), (\d+), (\d+), (\d+), (\d+)\)/g,
         '"$1-$2-$3T$4:$5:00"',
       );
-      console.log("Data received from server: ", JSON.parse(data));
-      // console.log("Data received");
-      const weights = realTimeWeights_to_ResponseWeights(JSON.parse(data));
-      if (refreshRef.current) {
-        const newWeights = tableWeights(weights, packages, scales)
-          .filter((weight) =>
-            optionalFilter(
-              weight,
-              init.toISOString(),
-              endRef.current.toISOString(),
-              packagesSelected.map((package_) => package_.package_id),
-              scalesSelected.map((scale) => scale.scale_id),
-            ),
-          )
-          .sort(optionalSorter)
-          .slice(0, limit);
-        setWeights(newWeights);
-        setLastRefresh(new Date());
-      }
-    });
+      const rt = realTimeWeights_to_ResponseWeights(JSON.parse(data));
 
-    return () => {
-      eventSource.close();
+      if (!refreshRef.current) return;
+
+      // Guard: evitar procesar si no hay packages/scales disponibles
+      if (!packagesRef.current?.length || !scalesRef.current?.length) {
+        return;
+      }
+
+      const newWeights = tableWeights(rt, packagesRef.current, scalesRef.current)
+        .filter((weight) =>
+          optionalFilter(
+            weight,
+            initRefLocal.current.toISOString(),
+            endRef.current.toISOString(),
+            packagesSelectedRef.current.map((p) => p.package_id),
+            scalesSelectedRef.current.map((s) => s.scale_id),
+          ),
+        )
+        .sort(optionalSorterRef.current)
+        .slice(0, limitRef.current);
+
+      setWeights(newWeights);
+      setLastRefresh(new Date());
     };
-  }, [
-    packages,
-    scales,
-    init,
-    limit,
-    optionalSorter,
-    packagesSelected,
-    scalesSelected,
-  ]);
+
+    es.addEventListener("newWeights", onNewWeights);
+    return () => {
+      es.removeEventListener("newWeights", onNewWeights);
+      es.close();
+    };
+  }, []); // deps vacío: se crea solo en mount
 
   function optionalFilter(
     weight: ResponseWeights,

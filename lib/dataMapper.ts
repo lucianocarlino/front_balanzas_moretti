@@ -27,24 +27,31 @@ export function tableWeights(
   scales: ResponseScales[],
 ): TableWeights[] {
   return weights.map((weight) => {
+    // Normalizar IDs a Number para evitar mismatch ("1" vs 1)
+    const weightPackageId = Number(weight.package_id);
+    const weightScaleId = Number(weight.scale_id);
+
     const foundPackage = packages.find(
-      (package_) => package_.package_id === weight.package_id,
+      (package_) => Number(package_.package_id) === weightPackageId,
     );
     const foundScale = scales.find(
-      (scale) => scale.scale_id === weight.scale_id,
+      (scale) => Number(scale.scale_id) === weightScaleId,
     );
 
-    const packageName = foundPackage
-      ? foundPackage.active
-        ? foundPackage.name
-        : `${foundPackage.name} (eliminado)`
-      : "(Paquete no encontrado)";
+    let packageName: string = "(Paquete no encontrado)";
+    let scaleName: string = "(Balanza no encontrada)";
 
-    const scaleName = foundScale
-      ? foundScale.active
+    if (foundPackage) {
+      packageName = foundPackage.active
+        ? foundPackage.name
+        : `${foundPackage.name} (eliminado)`;
+    }
+
+    if (foundScale) {
+      scaleName = foundScale.active
         ? foundScale.name
-        : `${foundScale.name} (eliminada)`
-      : "(Balanza no encontrada)";
+        : `${foundScale.name} (eliminada)`;
+    }
 
     return {
       id: weight.id,
