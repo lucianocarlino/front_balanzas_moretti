@@ -62,21 +62,12 @@ export default function FilterTable({
   const limitRef = useRef(limit);
   const optionalSorterRef = useRef<(w1: ResponseWeights, w2: ResponseWeights) => number>(() => 0);
 
-  const [refreshEnd, setRefreshEnd] = useState<boolean>(true);
   const endRef = useRef<Date>(new Date());
 
-  const firstEndRef = useRef<Date | null>(new Date(end));
-
+  // Actualizar endRef cuando 'end' cambia (por filtro user o reset)
   useEffect(() => {
-    if (!refreshEnd) return;
-
-    const interval = setInterval(() => {
-      endRef.current = new Date();
-      setEnd(new Date());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [refreshEnd]);
+    endRef.current = new Date(end);
+  }, [end]);
 
   function updateRefresh(value: boolean) {
     setRefresh(value);
@@ -210,9 +201,6 @@ export default function FilterTable({
   ) {
     if (initSelected === "") initSelected = new Date(0).toISOString();
     if (endSelected === "") endSelected = new Date().toISOString();
-    if (endSelected != firstEndRef.current?.toISOString()) {
-      setRefreshEnd(false);
-    }
     setPackagesSelected(packagesSelected);
     setScalesSelected(scalesSelected);
     setInit(new Date(initSelected));
@@ -250,7 +238,6 @@ export default function FilterTable({
     setSortVariable("Id");
     setSortOrder("Desc");
     setRefresh(true);
-    setRefreshEnd(true);
   }
 
   return (

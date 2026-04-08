@@ -11,7 +11,11 @@ export default async function Page({
   const packagesResult = await getAllPackages();
   const scalesResult = await getAllScales();
 
+  console.log("[Page] packagesResult:", packagesResult);
+  console.log("[Page] scalesResult:", scalesResult);
+
   if (!packagesResult.success || !scalesResult.success) {
+    console.error("[Page] Error en getAllPackages o getAllScales");
     return (
       <div className="w-full bg-white p-4">
         <h1 className="text-2xl text-red-500">Error</h1>
