@@ -26,6 +26,26 @@ export function tableWeights(
   packages: ResponsePackages[],
   scales: ResponseScales[],
 ): TableWeights[] {
+  // Si no hay weights, devolver array vacío (no error)
+  if (!weights || weights.length === 0) {
+    return [];
+  }
+
+  // Si faltan packages o scales, loguear warning pero continuar
+  if (!packages || packages.length === 0 || !scales || scales.length === 0) {
+    console.warn("tableWeights: packages o scales vacíos pero hay weights — devolviendo nombres por defecto");
+    return weights.map((w) => ({
+      id: w.id,
+      date_time: w.date_time,
+      package_id: w.package_id,
+      package: "(Paquete no encontrado)",
+      initial_weight: w.initial_weight,
+      final_weight: w.final_weight,
+      scale: "(Balanza no encontrada)",
+      scale_id: w.scale_id,
+    }));
+  }
+
   return weights.map((weight) => {
     // Normalizar IDs a Number para evitar mismatch ("1" vs 1)
     const weightPackageId = Number(weight.package_id);
