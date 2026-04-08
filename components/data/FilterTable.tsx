@@ -131,34 +131,6 @@ export default function FilterTable({
     refreshRef.current = refresh;
   }, [packages, scales, packagesSelected, scalesSelected, init, limit, refresh]);
 
-  // Cuando packages o scales cambian (ej: se agregan nuevos), remapear weights con los nuevos datos
-  useEffect(() => {
-    // Si packages o scales cambiaron, remapear los pesos actuales con los nuevos datos
-    // para evitar que SSE dispare con data stale
-    setWeights((prevWeights) => {
-      const remapped = prevWeights.map((w) => {
-        // Buscar paquete y balanza con los nuevos datos
-        const pkg = packages.find((p) => Number(p.package_id) === Number(w.package_id));
-        const scale = scales.find((s) => Number(s.scale_id) === Number(w.scale_id));
-
-        const packageName = pkg
-          ? pkg.active
-            ? pkg.name
-            : `${pkg.name} (eliminado)`
-          : "(Paquete no encontrado)";
-
-        const scaleName = scale
-          ? scale.active
-            ? scale.name
-            : `${scale.name} (eliminada)`
-          : "(Balanza no encontrada)";
-
-        return { ...w, package: packageName, scale: scaleName };
-      });
-      return remapped;
-    });
-  }, [packages, scales]);
-
   // Mantener optionalSorter en ref
   useEffect(() => {
     optionalSorterRef.current = optionalSorter;
