@@ -45,6 +45,11 @@ export interface ResponseScales {
   online: boolean;
   mapped: boolean;
   active: boolean;
+  mac: string;
+  ip: string;
+  nodemcu_status: string;
+  nodemcu_version: string;
+  comunicacion: string;
 }
 
 export interface ResponseWeights {

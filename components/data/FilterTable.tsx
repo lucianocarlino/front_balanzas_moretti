@@ -64,10 +64,15 @@ export default function FilterTable({
 
   const endRef = useRef<Date>(new Date());
 
-  // Actualizar endRef cuando 'end' cambia (por filtro user o reset)
+  // IMPORTANTE: Mantener endRef.current actualizada cada segundo para filtros en tiempo real
+  // pero SIN hacer state updates (que causarían re-renders infinitos)
   useEffect(() => {
-    endRef.current = new Date(end);
-  }, [end]);
+    const interval = setInterval(() => {
+      endRef.current = new Date();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   function updateRefresh(value: boolean) {
     setRefresh(value);
