@@ -107,7 +107,7 @@ export const getAllScales = async (): Promise<
   } catch (error) {
     return {
       success: false,
-      error: getErrorMessage(error, "Error al obtener balanzas"),
+      error: getErrorMessage(error, `Error al obtener balanzas: ${error}`),
     };
   }
 };
@@ -121,7 +121,7 @@ export const getAllPackages = async (): Promise<
   } catch (error) {
     return {
       success: false,
-      error: getErrorMessage(error, "Error al obtener paquetes"),
+      error: getErrorMessage(error, `Error al obtener paquetes: ${error}`),
     };
   }
 };

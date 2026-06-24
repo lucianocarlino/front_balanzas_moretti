@@ -47,6 +47,7 @@ export interface ResponseScales {
   active: boolean;
   mac: string;
   ip: string;
+  mdns: string;
   nodemcu_status: string;
   nodemcu_version: string;
   comunicacion: string;
