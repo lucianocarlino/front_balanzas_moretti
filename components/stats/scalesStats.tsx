@@ -66,7 +66,7 @@ export default function ScalesStats({
           ? true
           : w.package_id === (selectedPackage as ResponsePackages).package_id,
       )
-      .slice(0, cantWeights);
+      .slice(-cantWeights);
 
     // Limitar cantidad de registros
     return result.map((w) => {

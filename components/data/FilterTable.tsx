@@ -8,7 +8,14 @@ import {
 } from "@/lib/definition";
 import FormFilter from "./formFilter";
 import { WeightsTableSkeleton } from "../skeletons/skeletons";
-import { Suspense, useCallback, useEffect, useRef, useState, useMemo } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+} from "react";
 import Table from "@/components/data/table";
 import Pagination from "../navigation/pagination";
 import {
@@ -30,8 +37,14 @@ export default function FilterTable({
   totalPages: number;
 }) {
   // Solo activos para los selectores del formulario
-  const activePackages = useMemo(() => packages.filter((pkg) => pkg.active), [packages]);
-  const activeScales = useMemo(() => scales.filter((scale) => scale.active), [scales]);
+  const activePackages = useMemo(
+    () => packages.filter((pkg) => pkg.active),
+    [packages],
+  );
+  const activeScales = useMemo(
+    () => scales.filter((scale) => scale.active),
+    [scales],
+  );
 
   // Memoizar mapping inicial
   const mappedInitialWeights = useMemo(
@@ -46,7 +59,9 @@ export default function FilterTable({
   const [init, setInit] = useState<Date>(new Date(0));
   const [end, setEnd] = useState<Date>(new Date());
   const [limit, setLimit] = useState<number>(1000);
-  const [weights, setWeights] = useState<TableWeights[]>(() => mappedInitialWeights);
+  const [weights, setWeights] = useState<TableWeights[]>(
+    () => mappedInitialWeights,
+  );
   const [sortVariable, setSortVariable] = useState<string>("Id");
   const [sortOrder, setSortOrder] = useState<string>("Desc");
   const [refresh, setRefresh] = useState<boolean>(true);
@@ -60,7 +75,9 @@ export default function FilterTable({
   const scalesSelectedRef = useRef(scalesSelected);
   const initRefLocal = useRef(init);
   const limitRef = useRef(limit);
-  const optionalSorterRef = useRef<(w1: ResponseWeights, w2: ResponseWeights) => number>(() => 0);
+  const optionalSorterRef = useRef<
+    (w1: ResponseWeights, w2: ResponseWeights) => number
+  >(() => 0);
 
   const endRef = useRef<Date>(new Date());
 
@@ -125,7 +142,15 @@ export default function FilterTable({
     initRefLocal.current = init;
     limitRef.current = limit;
     refreshRef.current = refresh;
-  }, [packages, scales, packagesSelected, scalesSelected, init, limit, refresh]);
+  }, [
+    packages,
+    scales,
+    packagesSelected,
+    scalesSelected,
+    init,
+    limit,
+    refresh,
+  ]);
 
   // Mantener optionalSorter en ref
   useEffect(() => {
@@ -134,7 +159,7 @@ export default function FilterTable({
 
   // Crear EventSource UNA SOLA VEZ en mount, leer estado desde refs
   useEffect(() => {
-    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/sse`);
+    const es = new EventSource(`$/api/sse`);
     es.onopen = () => console.log("SSE connection opened");
 
     const onNewWeights = (event: MessageEvent) => {
@@ -152,7 +177,11 @@ export default function FilterTable({
         return;
       }
 
-      const newWeights = tableWeights(rt, packagesRef.current, scalesRef.current)
+      const newWeights = tableWeights(
+        rt,
+        packagesRef.current,
+        scalesRef.current,
+      )
         .filter((weight) =>
           optionalFilter(
             weight,

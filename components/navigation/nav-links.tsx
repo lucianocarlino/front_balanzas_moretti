@@ -1,22 +1,26 @@
-'use client';
+"use client";
 
-import { HomeIcon, ScaleIcon, ArchiveBoxIcon, ChartBarIcon } from '@heroicons/react/24/outline';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import clsx from 'clsx';
+import {
+  HomeIcon,
+  ScaleIcon,
+  ArchiveBoxIcon,
+  ChartBarIcon,
+} from "@heroicons/react/24/outline";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import clsx from "clsx";
 
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
 const links = [
-  { name: 'Home', href: '/', icon: HomeIcon },
-  { name: 'Balanzas', href: '/scales', icon: ScaleIcon },
-  { name: 'Envases', href: '/packages', icon: ArchiveBoxIcon },
-  { name: 'Estadisticas', href: '/stats', icon: ChartBarIcon },
+  { name: "Home", href: "/", icon: HomeIcon },
+  { name: "Balanzas", href: "/scales", icon: ScaleIcon },
+  { name: "Envases", href: "/packages", icon: ArchiveBoxIcon },
+  { name: "Estadisticas", href: "/stats", icon: ChartBarIcon },
 ];
 
 export default function NavLinks() {
   const pathname = usePathname();
-  console.log(pathname);
   return (
     <>
       {links.map((link) => {
@@ -26,10 +30,11 @@ export default function NavLinks() {
             key={link.name}
             href={link.href}
             className={clsx(
-              "flex h-[48px] grow items-center justify-center gap-1 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3",
+              "flex h-[48px] grow items-center justify-center gap-1 rounded-md px-3 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200 hover:text-slate-900 md:flex-none md:justify-start md:p-2 md:px-3",
               {
-                'bg-sky-100 text-blue-600' : pathname == link.href,
-                'text-gray-300': pathname !== link.href,
+                "bg-cyan-50 text-cyan-800 ring-1 ring-inset ring-cyan-200":
+                  pathname == link.href,
+                "text-slate-700": pathname !== link.href,
               },
             )}
           >
