@@ -26,7 +26,7 @@ export async function createScale(form: FormData): Promise<ActionResult> {
     const name = form.get("name");
     const packages = form.getAll("package_id");
     const address = form.get("address");
-    await server.post("/scales", {
+    await server.post("/api/scales", {
       name,
       packages: packages.map(Number),
       address,
@@ -48,7 +48,7 @@ export async function updateScale(
   try {
     const name = form.get("name");
     const packages = form.getAll("package_id");
-    await server.put(`/scales/update/${scale_id}`, {
+    await server.put(`/api/scales/update/${scale_id}`, {
       name,
       packages: packages.map(Number),
     });
@@ -64,7 +64,7 @@ export async function updateScale(
 
 export async function deleteScale(scale_id: number): Promise<ActionResult> {
   try {
-    const response = await server.delete(`/scales/${scale_id}`);
+    const response = await server.delete(`/api/scales/${scale_id}`);
     revalidatePath("/scales");
     if (response.status === 200) {
       return { success: true };
@@ -82,7 +82,7 @@ export async function deleteScale(scale_id: number): Promise<ActionResult> {
 
 export async function deletePackage(package_id: number): Promise<ActionResult> {
   try {
-    const response = await server.delete(`/packages/${package_id}`);
+    const response = await server.delete(`/api/packages/${package_id}`);
     revalidatePath("/packages");
     if (response.status === 200) {
       return { success: true };
@@ -102,7 +102,7 @@ export const getAllScales = async (): Promise<
   ActionResult<ResponseScales[]>
 > => {
   try {
-    const { data } = await server.get<ResponseScales[]>("/scales");
+    const { data } = await server.get<ResponseScales[]>("/api/scales");
     return { success: true, data };
   } catch (error) {
     return {
@@ -116,7 +116,7 @@ export const getAllPackages = async (): Promise<
   ActionResult<ResponsePackages[]>
 > => {
   try {
-    const { data } = await server.get<ResponsePackages[]>("/packages");
+    const { data } = await server.get<ResponsePackages[]>("/api/packages");
     return { success: true, data };
   } catch (error) {
     return {
@@ -130,7 +130,7 @@ export const getAvailableAddresses = async (): Promise<
   ActionResult<number[]>
 > => {
   try {
-    const { data } = await server.get<number[]>("/scales_availables");
+    const { data } = await server.get<number[]>("/api/scales_availables");
     return { success: true, data };
   } catch (error) {
     return {
@@ -144,7 +144,9 @@ export const getScale = async (
   scale_id: number,
 ): Promise<ActionResult<ResponseScales>> => {
   try {
-    const { data } = await server.get<ResponseScales>(`/scales/${scale_id}`);
+    const { data } = await server.get<ResponseScales>(
+      `/api/scales/${scale_id}`,
+    );
     return { success: true, data };
   } catch (error) {
     return {
@@ -159,7 +161,7 @@ export const getPackage = async (
 ): Promise<ActionResult<ResponsePackages>> => {
   try {
     const { data } = await server.get<ResponsePackages>(
-      `/packages/${package_id}`,
+      `/api/packages/${package_id}`,
     );
     return { success: true, data };
   } catch (error) {
@@ -178,7 +180,7 @@ export async function getWeights(
   scale_id: number[],
 ): Promise<ActionResult<ResponseWeights[]>> {
   try {
-    const { data } = await server.get<ResponseWeights[]>("/weights", {
+    const { data } = await server.get<ResponseWeights[]>("/api/weights", {
       params: {
         limit: limit,
         init: init,
@@ -201,7 +203,7 @@ export async function getRealTimeWeights(): Promise<
 > {
   try {
     console.log("entro");
-    const { data } = await server.get<ResponseWeights[]>("/sse", {});
+    const { data } = await server.get<ResponseWeights[]>("/api/sse", {});
     console.log("salio");
     return { success: true, data };
   } catch (error) {
@@ -218,7 +220,7 @@ export async function createPackage(form: FormData): Promise<ActionResult> {
     const expected_weight = form.get("expected_weight");
     const minimum_weight = form.get("minimum_weight");
     const maximum_weight = form.get("maximum_weight");
-    await server.post("/packages", {
+    await server.post("/api/packages", {
       name,
       expected_weight,
       minimum_weight,
@@ -250,7 +252,7 @@ export async function updatePackage(
       maximum_weight,
       package_id,
     );
-    await server.put(`/packages/update/${package_id}`, {
+    await server.put(`/api/packages/update/${package_id}`, {
       name,
       expected_weight,
       minimum_weight,
@@ -268,7 +270,7 @@ export async function updatePackage(
 
 export async function restoreScale(scale_id: number): Promise<ActionResult> {
   try {
-    await server.put(`/scales/restore/${scale_id}`);
+    await server.put(`/api/scales/restore/${scale_id}`);
     revalidatePath("/scales");
   } catch (error) {
     return {
@@ -283,7 +285,7 @@ export async function restorePackage(
   package_id: number,
 ): Promise<ActionResult> {
   try {
-    await server.put(`/packages/restore/${package_id}`);
+    await server.put(`/api/packages/restore/${package_id}`);
     revalidatePath("/packages");
   } catch (error) {
     return {
